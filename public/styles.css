@@ -82,6 +82,11 @@ body{
 }
 .nav a:hover{color:var(--text)}
 
+.lang-switcher{display:flex;gap:10px;align-items:center}
+.lang-btn{padding:10px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.05);color:var(--text);cursor:pointer;font-weight:700;transition:.2s ease}
+.lang-btn.active{background:linear-gradient(135deg, rgba(120,255,183,.18), rgba(109,220,255,.18));border-color:rgba(120,255,183,.25);box-shadow:0 10px 30px rgba(109,220,255,.16)}
+.lang-btn:hover{transform:translateY(-1px)}
+
 main{width:min(1240px, calc(100% - 32px)); margin:0 auto}
 .hero{
   min-height:92vh;
@@ -359,8 +364,9 @@ pre{
   .setup-grid{grid-template-columns:1fr}
 }
 @media (max-width: 760px){
-  .site-header{padding:14px 16px}
+  .site-header{padding:14px 16px; gap:12px; flex-wrap:wrap}
   .nav{display:none}
+  .lang-switcher{width:100%; justify-content:flex-end}
   main{width:min(100% - 20px, 1240px)}
   .hero{padding-top:40px}
   .metric-grid,.form-grid,.feature-grid{grid-template-columns:1fr}

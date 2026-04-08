@@ -14,6 +14,14 @@ app.use(express.static(path.join(__dirname, "public")));
 const PORT = process.env.PORT || 3000;
 const MODEL = process.env.OPENAI_MODEL || "gpt-5-mini";
 
+function detectLang(text = "") {
+  return /[Ⴀ-ჿ]/.test(text) ? "ka" : "en";
+}
+
+function resolveLang(preferred, prompt = "") {
+  return preferred === "ka" || preferred === "en" ? preferred : detectLang(prompt);
+}
+
 function clampNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
@@ -223,7 +231,8 @@ app.post("/api/solve/flowerbeds", (req, res) => {
 app.post("/api/ai/chat", async (req, res) => {
   try {
     const prompt = String(req.body.prompt || "").trim();
-    if (!prompt) return res.status(400).json({ ok: false, error: "ცარიელი მოთხოვნა." });
+    const lang = resolveLang(req.body.lang, prompt);
+    if (!prompt) return res.status(400).json({ ok: false, error: lang === "en" ? "Empty prompt." : "ცარიელი მოთხოვნა." });
 
     const data = await openaiResponses({
       model: MODEL,
@@ -322,7 +331,7 @@ app.post("/api/ai/extract", async (req, res) => {
       return res.json({ ok: true, kind: parsed.problem_id, extracted: parsed, result });
     }
 
-    return res.status(400).json({ ok: false, error: "უცნობი შაბლონი." });
+    return res.status(400).json({ ok: false, error: lang === "en" ? "Unknown template." : "უცნობი შაბლონი." });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
