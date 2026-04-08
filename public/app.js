@@ -47,14 +47,40 @@ function renderMath(element) {
 
 function normalizeMathDelimiters(text) {
   if (!text) return "";
+
   return String(text)
-    .replace(/\\\((.*?)\\\)/gs, '\\($1\\)')
-    .replace(/\\\[(.*?)\\\]/gs, '\\[$1\\]');
+    // normalize common escaped LaTeX delimiters
+    .replace(/\\\\\[/g, "\\[")
+    .replace(/\\\\\]/g, "\\]")
+    .replace(/\\\\\(/g, "\\(")
+    .replace(/\\\\\)/g, "\\)")
+    // normalize malformed thousands separators like 3\{,\}249
+    .replace(/\\\{,\\\}/g, ",")
+    // convert fenced math blocks into display math for MathJax
+    .replace(/```(?:latex|tex|math)\s*([\s\S]*?)```/gi, (_, expr) => `\\[${expr.trim()}\\]`);
+}
+
+function preserveMathForMarkdown(text) {
+  return text
+    .replace(/\\\[/g, "@@MATH_BLOCK_OPEN@@")
+    .replace(/\\\]/g, "@@MATH_BLOCK_CLOSE@@")
+    .replace(/\\\(/g, "@@MATH_INLINE_OPEN@@")
+    .replace(/\\\)/g, "@@MATH_INLINE_CLOSE@@");
+}
+
+function restoreMathAfterMarkdown(html) {
+  return html
+    .replace(/@@MATH_BLOCK_OPEN@@/g, "\\[")
+    .replace(/@@MATH_BLOCK_CLOSE@@/g, "\\]")
+    .replace(/@@MATH_INLINE_OPEN@@/g, "\\(")
+    .replace(/@@MATH_INLINE_CLOSE@@/g, "\\)");
 }
 
 async function renderMarkdown(target, text) {
-  const safeText = normalizeMathDelimiters(text);
-  target.innerHTML = marked.parse(safeText);
+  const normalized = normalizeMathDelimiters(text);
+  const protectedText = preserveMathForMarkdown(normalized);
+  const rendered = marked.parse(protectedText, { breaks: true });
+  target.innerHTML = restoreMathAfterMarkdown(rendered);
   await renderMath(target);
 }
 
